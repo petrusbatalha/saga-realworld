@@ -1,0 +1,20 @@
+[package]
+name = "realworld-balance"
+version = "0.1.0"
+authors = ["Petrus Batalha <petrus.batalha1@ibm.com>"]
+edition = "2018"
+
+[dependencies]
+flume = "0.10.3"
+sqlx = { version = "0.5.1", features = [ "runtime-tokio-rustls", "postgres"] }
+rdkafka = { version = "0.25", features = [ "ssl-vendored", "gssapi-vendored", "gssapi" ] }
+tokio = { version = "1.4.0", features = [ "full" ] }
+strum = { version = "0.20", features = ["derive"] }
+uuid = { version = "0.8", features = ["serde", "v4"] }
+realworld-shared = { path = "../realworld-shared" }
+async-trait = "0.1.48"
+strum_macros = "0.20"
+dotenv = "0.15.0"
+anyhow = "1.0.40"
+serde = "1.0"
+serde_json = "*"

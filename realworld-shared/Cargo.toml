@@ -1,0 +1,17 @@
+[package]
+name = "realworld-shared"
+version = "0.1.0"
+authors = ["Petrus Batalha <petrus.batalha1@ibm.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+strum_macros = "0.20"
+rdkafka = "0.25"
+anyhow = "1.0.40"
+tokio = "1.4.0"
+serde = "1.0"
+serde_json = "*"
+uuid = { version = "0.8", features = ["serde", "v4"] }
+sqlx = { version = "0.5.1", features = [ "runtime-tokio-rustls", "postgres"] }

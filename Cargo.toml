@@ -1,0 +1,2 @@
+[workspace]
+members = [ "realworld-order", "realworld-balance", "realworld-shared" ]
