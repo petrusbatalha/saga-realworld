@@ -1,7 +1,6 @@
-
 pub mod kafka_adapter {
-    use std::env;
     use rdkafka::ClientConfig;
+    use std::env;
 
     const KAFKA_CONFIG: &str = "KAFKA";
 
@@ -26,9 +25,9 @@ pub mod kafka_adapter {
 }
 
 pub mod cockroach_adapter {
-    use std::env;
     use sqlx::postgres::PgPoolOptions;
     use sqlx::{Pool, Postgres};
+    use std::env;
 
     const DB_HOST_ENV: &str = "DATABASE_URL";
     const DB_MAX_CONNECTIONS_ENV: &str = "DATABASE_MAX_CONNECTIONS";
@@ -65,8 +64,33 @@ pub mod structs {
     #[derive(Serialize, Deserialize)]
     pub struct Transaction {
         pub transaction_type: TransactionType,
+        pub parent_id: Option<Uuid>,
         pub transaction_id: Uuid,
         pub account: i64,
         pub amount: f64,
+    }
+
+    #[derive(Serialize, Deserialize, strum_macros::Display)]
+    pub enum Status {
+        Completed,
+        Pending,
+        Failed(String),
+    }
+
+    #[derive(Serialize, Deserialize)]
+    pub struct TransactionStatus {
+        pub status: Status,
+        pub account: i64,
+        pub id: Uuid,
+    }
+
+    impl TransactionStatus {
+        pub fn from_transaction(transaction: Transaction, status: Status) -> TransactionStatus {
+            TransactionStatus {
+                status,
+                account: transaction.account,
+                id: transaction.transaction_id,
+            }
+        }
     }
 }

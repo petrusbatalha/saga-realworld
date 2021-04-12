@@ -1,10 +1,9 @@
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Account {
-    id: Uuid,
+    id: i64,
     balance: f64,
-    last_update: u64,
 }
 
 impl Account {
