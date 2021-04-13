@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use realworld_shared::structs::{TransactionType, Transfer, Transaction};
 use sqlx::{Pool, Postgres, Row};
 use std::sync::Arc;
+use std::any::Any;
 
 #[derive(Clone)]
 pub struct CockroachAdapter {
@@ -15,14 +16,11 @@ impl CockroachAdapter {
         CockroachAdapter { pool }
     }
     pub async fn persist_transaction(&self, transaction: &Transaction, id: String) -> Result<()> {
-        match transaction.transaction_type {
-            TransactionType::Withdraw => -amount,
-            TransactionType::Deposit =>
-        };
-        sqlx::query( r#"INSERT INTO transactions(id, amount, account, transfer_id) VALUES ($1, $2, $3, $4);"#)
+        sqlx::query( r#"INSERT INTO transactions(id, amount, account, transfer_id, transaction_type) VALUES ($1, $2, $3, $4, $5);"#)
             .bind(transaction.transaction_id.to_string())
             .bind(transaction.amount)
             .bind(transaction.account.to_string())
+            .bind(transaction.transaction_type.to_string())
             .bind(id)
             .execute(&*self.pool)
             .await?;
