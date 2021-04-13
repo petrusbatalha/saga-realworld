@@ -16,7 +16,7 @@ impl CockroachAdapter {
         CockroachAdapter { pool }
     }
     pub async fn persist_transaction(&self, transaction: &Transaction, id: String) -> Result<()> {
-        sqlx::query( r#"INSERT INTO transactions(id, amount, account, transfer_id, transaction_type) VALUES ($1, $2, $3, $4, $5);"#)
+        sqlx::query( r#"INSERT INTO transactions(id, amount, account, transaction_type, transfer_id) VALUES ($1, $2, $3, $4, $5);"#)
             .bind(transaction.transaction_id.to_string())
             .bind(transaction.amount)
             .bind(transaction.account.to_string())
