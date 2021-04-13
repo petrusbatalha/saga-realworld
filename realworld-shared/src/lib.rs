@@ -64,10 +64,16 @@ pub mod structs {
     #[derive(Serialize, Deserialize)]
     pub struct Transaction {
         pub transaction_type: TransactionType,
-        pub parent_id: Option<Uuid>,
         pub transaction_id: Uuid,
         pub account: i64,
         pub amount: f64,
+    }
+
+    #[derive(Serialize, Deserialize)]
+    pub struct Transfer {
+        pub transfer_id: Uuid,
+        pub withdraw_transaction: Transaction,
+        pub deposit_transaction: Transaction,
     }
 
     #[derive(Serialize, Deserialize, strum_macros::Display)]
@@ -78,18 +84,20 @@ pub mod structs {
     }
 
     #[derive(Serialize, Deserialize)]
-    pub struct TransactionStatus {
+    pub struct TransferenceStatus {
         pub status: Status,
-        pub account: i64,
+        pub source_account: i64,
+        pub target_account: i64,
         pub id: Uuid,
     }
 
-    impl TransactionStatus {
-        pub fn from_transaction(transaction: Transaction, status: Status) -> TransactionStatus {
-            TransactionStatus {
+    impl TransferenceStatus {
+        pub fn from_transference(transference: Transfer, status: Status) -> TransferenceStatus {
+            TransferenceStatus {
                 status,
-                account: transaction.account,
-                id: transaction.transaction_id,
+                source_account: transference.withdraw_transaction.account,
+                target_account: transference.deposit_transaction.account,
+                id: transference.transfer_id,
             }
         }
     }

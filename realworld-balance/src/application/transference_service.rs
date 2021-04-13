@@ -1,43 +1,43 @@
 use crate::application::error_msgs;
-use crate::application::ports::port_out::transaction_store::TransactionStore;
-use flume::{Receiver, Sender, TryRecvError};
-use realworld_shared::structs::{Status, Transaction, TransactionStatus};
+use crate::application::ports::port_out::transference_store::TransferenceStore;
+use flume::{Receiver, Sender};
+use realworld_shared::structs::{Status, Transfer, TransferenceStatus};
 
 #[derive(Clone, Debug)]
 pub struct TransactionService<T> {
     pub(crate) persist: T,
 }
 
-impl<T: 'static + TransactionStore + std::marker::Sync + Send> TransactionService<T> {
+impl<T: 'static + TransferenceStore + std::marker::Sync + Send> TransactionService<T> {
     pub async fn start_transaction_handler(
         &self,
-        receiver: Receiver<Transaction>,
-        sender: Sender<TransactionStatus>,
+        receiver: Receiver<Transfer>,
+        sender: Sender<TransferenceStatus>,
     ) {
         println!("Start transaction handler.");
         loop {
-            while let Some(transaction) = receiver.iter().next() {
-                match &self.persist.get_account(transaction.account).await {
-                    Ok(account) => match account >= &transaction.amount {
+            while let Some(transfer) = receiver.iter().next() {
+                match &self.persist.get_account(transfer.withdraw_transaction.account).await {
+                    Ok(account) => match account >= &transfer.withdraw_transaction.amount {
                         true => {
                             println!("WTF account {}", account);
                             match self
                                 .persist
-                                .add_transaction_update_balance(&transaction)
+                                .add_transaction_update_balance(&transfer)
                                 .await
                             {
                                 Ok(_) => {
                                     sender
-                                        .send(TransactionStatus::from_transaction(
-                                            transaction,
+                                        .send(TransferenceStatus::from_transference(
+                                            transfer,
                                             Status::Completed,
                                         ))
                                         .unwrap();
                                 }
                                 Err(e) => {
                                     sender
-                                        .send(TransactionStatus::from_transaction(
-                                            transaction,
+                                        .send(TransferenceStatus::from_transference(
+                                            transfer,
                                             Status::Failed(e.to_string()),
                                         ))
                                         .unwrap();
@@ -46,8 +46,8 @@ impl<T: 'static + TransactionStore + std::marker::Sync + Send> TransactionServic
                         }
                         false => {
                             sender
-                                .send(TransactionStatus::from_transaction(
-                                    transaction,
+                                .send(TransferenceStatus::from_transference(
+                                    transfer,
                                     Status::Failed(error_msgs::INSUFFICIENT_BALANCE.to_string()),
                                 ))
                                 .unwrap();
@@ -55,8 +55,8 @@ impl<T: 'static + TransactionStore + std::marker::Sync + Send> TransactionServic
                     },
                     Err(_) => {
                         sender
-                            .send(TransactionStatus::from_transaction(
-                                transaction,
+                            .send(TransferenceStatus::from_transference(
+                                transfer,
                                 Status::Failed(error_msgs::ACCOUNT_DOESNT_EXIST.to_string()),
                             ))
                             .unwrap();

@@ -1,13 +1,11 @@
-use crate::application::ports::port_in::transaction_consumer::TransactionEvent;
-use anyhow::Result;
+use crate::application::ports::port_in::transference_consumer::TransferenceEvent;
 use async_trait::async_trait;
-use flume::{Receiver, SendError, Sender};
+use flume::{Receiver, Sender};
 use rdkafka::consumer::{CommitMode, Consumer, StreamConsumer};
 use rdkafka::producer::{FutureProducer, FutureRecord};
 use rdkafka::{ClientConfig, Message};
-use realworld_shared::structs::{Transaction, TransactionStatus};
+use realworld_shared::structs::{TransferenceStatus, Transfer};
 use std::sync::Arc;
-use std::thread;
 use std::time::Duration;
 
 const KAFKA_RESPONSE_TOPIC: &str = "enge-corp-transac-response";
@@ -32,8 +30,8 @@ impl KafkaAdapter {
 }
 
 #[async_trait]
-impl TransactionEvent for KafkaAdapter {
-    async fn consume(&self, sender: Sender<Transaction>) {
+impl TransferenceEvent for KafkaAdapter {
+    async fn consume(&self, sender: Sender<Transfer>) {
         self.stream_consumer
             .subscribe(&[KAFKA_COMPENSATION_TOPIC, KAFKA_REQUEST_TOPIC])
             .expect("Can't subscribe to transactions topics. ERR");
@@ -49,16 +47,11 @@ impl TransactionEvent for KafkaAdapter {
                         Some(Err(_)) => "",
                     };
 
-                    println!("payload: {}", payload);
-                    let transaction: Transaction = serde_json::from_str(payload).unwrap();
+                    let transfer: Transfer = serde_json::from_str(payload).unwrap();
 
-                    match sender.send(transaction) {
-                        Ok(_) => {
-                            println!("Message sent");
-                        }
-                        Err(e) => {
-                            println!("Failed to send status: {}", e);
-                        }
+                    match sender.send(transfer) {
+                        Ok(_) => {}
+                        Err(e) => println!("Failed to send status: {}", e),
                     };
 
                     self.stream_consumer
@@ -69,22 +62,20 @@ impl TransactionEvent for KafkaAdapter {
         }
     }
 
-    async fn notify(&self, receiver: Receiver<TransactionStatus>) {
-        println!("Start notifier");
+    async fn notify(&self, receiver: Receiver<TransferenceStatus>) {
         loop {
             match receiver.try_recv() {
                 Ok(transaction_event) => {
-                    println!("Status received");
-                    let transaction = serde_json::to_string(&transaction_event).unwrap();
+                    let transference = serde_json::to_string(&transaction_event).unwrap();
 
-                    let transaction_record: FutureRecord<String, String> =
-                        FutureRecord::to(KAFKA_RESPONSE_TOPIC).payload(&transaction);
+                    let transference_record: FutureRecord<String, String> =
+                        FutureRecord::to(KAFKA_RESPONSE_TOPIC).payload(&transference);
 
-                    let transaction_future = self
+                    let transference_future = self
                         .future_producer
-                        .send(transaction_record, Duration::from_secs(1));
+                        .send(transference_record, Duration::from_secs(1));
 
-                    match transaction_future.await {
+                    match transference_future.await {
                         Ok(_) => Ok(()),
                         Err(e) => Err(anyhow::Error::from(e.0)),
                     }
