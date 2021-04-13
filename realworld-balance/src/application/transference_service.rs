@@ -14,13 +14,11 @@ impl<T: 'static + TransferenceStore + std::marker::Sync + Send> TransactionServi
         receiver: Receiver<Transfer>,
         sender: Sender<TransferenceStatus>,
     ) {
-        println!("Start transaction handler.");
         loop {
             while let Some(transfer) = receiver.iter().next() {
                 match &self.persist.get_account(transfer.withdraw_transaction.account).await {
                     Ok(account) => match account >= &transfer.withdraw_transaction.amount {
                         true => {
-                            println!("WTF account {}", account);
                             match self
                                 .persist
                                 .add_transaction_update_balance(&transfer)
